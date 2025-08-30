@@ -1,228 +1,183 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>TERMINAL 00 — Visu</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>TERMINAL 00 — Minimal</title>
 
-<!-- Pixel / MS-DOS style font -->
-<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <!-- Pixel / MS-DOS style font (Press Start 2P) -->
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 
-<style>
-  :root{
-    --bg: #000;
-    --center-pink: #ff86b4;
-    --side-pink: #ff6fa0;
-    --accent1: #ffb0d0;
-    --blue: #052a6b; /* azul escuro */
-  }
-  *{box-sizing:border-box;margin:0;padding:0}
-  html,body{height:100%}
-  body{
-    font-family: 'Press Start 2P', monospace;
-    background: var(--bg) url('background.jpg') center/cover fixed;
-    color:var(--center-pink);
-    -webkit-font-smoothing: none;
-    -moz-osx-font-smoothing: grayscale;
-    overflow:hidden;
-  }
+  <style>
+    :root{
+      --bg-image: url('background.jpg'); /* substitua por sua imagem */
+      --text-color: #052a6b; /* azul escuro */
+      --glass: rgba(0,0,0,0.28);
+    }
 
-  /* Layout: 3 colunas (lado-esquerdo, centro, lado-direito) */
-  .wrap{
-    height:100vh; display:flex; gap:18px;
-    align-items:stretch; padding:24px;
-    backdrop-filter: blur(0);
-  }
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%}
 
-  .col{
-    display:flex; flex-direction:column; align-items:center; overflow:hidden;
-  }
+    body{
+      font-family: 'Press Start 2P', monospace;
+      background-image: var(--bg-image);
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:var(--text-color);
+      -webkit-font-smoothing: none;
+      -moz-osx-font-smoothing: grayscale;
+      overflow:hidden;
+    }
 
-  .side{
-    width:240px; min-width:160px; max-width:280px;
-    padding:6px 8px; overflow:auto;
-  }
+    /* soft overlay to make text readable */
+    .overlay{
+      position:fixed;inset:0;background:linear-gradient(rgba(0,0,0,0.25), rgba(0,0,0,0.25));
+      pointer-events:none;
+    }
 
-  .center{
-    flex:1; padding:18px; display:flex; align-items:center; justify-content:center; overflow:auto;
-  }
+    .container{
+      width:85%;max-width:1100px;padding:26px 30px;border-radius:8px;background:var(--glass);
+      box-shadow:0 10px 30px rgba(0,0,0,0.6);backdrop-filter: blur(2px);
+      text-align:center;pointer-events:auto;
+    }
 
-  pre{
-    white-space:pre; font-family: 'Press Start 2P', monospace;
-    line-height:1.0; margin:0;
-  }
+    .big-text{
+      color:var(--text-color);
+      font-size:clamp(18px,6vw,48px);
+      line-height:1.1;
+      white-space:pre-wrap;
+      text-shadow: 0 1px 0 rgba(255,255,255,0.02);
+    }
 
-  /* ASCII floral block style (lado esquerdo/direito) */
-  .flower{
-    color: var(--side-pink);
-    font-size:10px; letter-spacing:1px;
-    text-shadow:
-      0 0 1px rgba(255,160,200,0.6),
-      -1px 0 2px rgba(255,110,150,0.06),
-      1px 0 2px rgba(255,200,240,0.02);
-    opacity:0.98;
-  }
+    /* small UI buttons */
+    .controls{
+      position:fixed;right:18px;bottom:18px;display:flex;gap:10px;z-index:40;
+    }
+    .btn{
+      font-family:inherit;font-size:11px;padding:8px 10px;border-radius:6px;border:1px solid rgba(255,255,255,0.06);
+      background:rgba(255,255,255,0.02);color:inherit;cursor:pointer;backdrop-filter: blur(2px);
+    }
 
-  /* Coluna central: binário */
-  .binary{
-    color: var(--center-pink);
-    font-size:12px;
-    letter-spacing:3px;
-    padding:8px 18px;
-    max-width:920px;
-    background: rgba(0,0,0,0.45);
-    border-radius:6px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.02);
-  }
+    /* scanlines effect */
+    .scanlines::after{
+      content:"";position:fixed;inset:0;pointer-events:none;mix-blend-mode:soft-light;
+      background-image:linear-gradient(transparent 90%, rgba(0,0,0,0.08) 100%);
+      background-size:100% 4px;opacity:.6;z-index:20;
+    }
 
-  /* "Big text" mode (alternável para azul escuro) */
-  .blueMode .binary{ color: var(--blue); text-shadow: 0 1px 0 rgba(0,0,0,0.5); }
+    /* hidden easter-egg */
+    .secret{
+      margin-top:18px;font-size:12px;opacity:0;transition:opacity .6s ease;max-width:900px;margin-left:auto;margin-right:auto;
+      color:#8fb0ff;
+    }
+    .secret.revealed{opacity:1}
 
-  /* CRT scanlines overlay */
-  .scanlines::after{
-    content:""; position:fixed; inset:0; pointer-events:none; z-index:40;
-    background-image: linear-gradient(transparent 78%, rgba(0,0,0,0.28) 100%);
-    background-size:100% 4px; mix-blend-mode:overlay; opacity:0.6;
-  }
+    /* subtle CRT glow */
+    .crt{
+      text-shadow:0 0 6px rgba(8,70,160,0.07),0 0 18px rgba(8,70,160,0.03);
+    }
 
-  /* subtle vignette */
-  .vignette::before{
-    content:""; position:fixed; inset:0; pointer-events:none; z-index:39;
-    background: radial-gradient(ellipse at center, rgba(0,0,0,0) 45%, rgba(0,0,0,0.6) 100%);
-  }
-
-  /* Controls */
-  .controls{ position:fixed; right:18px; top:18px; display:flex; gap:8px; z-index:60; }
-  .btn{
-    font-family:inherit; font-size:10px; padding:8px 10px; border-radius:6px;
-    border:1px solid rgba(255,255,255,0.06); background:rgba(255,255,255,0.02);
-    color:inherit; cursor:pointer;
-  }
-
-  /* make scrollbars tiny and themed */
-  ::-webkit-scrollbar{ height:8px; width:8px }
-  ::-webkit-scrollbar-thumb{ background: rgba(255,255,255,0.04); border-radius:6px }
-  ::-webkit-scrollbar-track{ background: transparent }
-
-  @media (max-width:900px){
-    .side{ display:none } /* mobile: esconde sides para foco no centro */
-    .wrap{ padding:12px }
-  }
-</style>
+    /* minimal responsive adjustments */
+    @media (max-width:520px){
+      .container{padding:18px}
+      .btn{padding:6px 8px;font-size:10px}
+    }
+  </style>
 </head>
-<body class="scanlines vignette">
+<body class="scanlines">
 
-  <div class="controls">
-    <button id="play" class="btn">▶ Play</button>
-    <button id="toggleColor" class="btn">Azul escuro</button>
-    <button id="invert" class="btn">Invert</button>
+  <div class="overlay"></div>
+
+  <div class="container crt" role="main" aria-label="Conteúdo principal">
+    <!-- Substitua o texto abaixo pelo seu grande texto em azul escuro -->
+    <div id="mainText" class="big-text">BEM-VINDO AO TERMINAL 00
+
+
+
+
+
+</div>
+
+    <div id="secret" class="secret">[EASTER EGG] — Pressione a tecla <kbd>E</kbd> para ocultar novamente.</div>
   </div>
 
-  <div class="wrap" id="wrap">
-    <div class="col side" id="leftCol" aria-hidden="false"></div>
-
-    <div class="col center">
-      <pre id="centerBin" class="binary" aria-label="Fluxo de Dados"></pre>
-    </div>
-
-    <div class="col side" id="rightCol" aria-hidden="false"></div>
-  </div>
-
-  <!-- audio -->
-  <audio id="bg" loop preload="auto">
+  <!-- background audio (troque audio.mp3 pelo arquivo desejado) -->
+  <audio id="bgAudio" loop preload="auto">
     <source src="audio.mp3" type="audio/mpeg">
+    <!-- formato alternativo: .ogg -->
   </audio>
 
-<script>
-/* ---------- ASCII flower art (copie/cole sua versão se quiser) ---------- */
-const flower = String.raw`
-        .     .     .     .     .     . 
-        .:...::...::...::...::...::...:.
-      .''  .  .  .  .  .  .  .  .  .  ''.
-    .'  .  .  .  .  .  .  .  .  .  .  .  '.
-   :  .   .   .   .   .   .   .   .   .   :
-   :  .   .   .   .   .   .   .   .   .   :
-    '.  .  .  .  .  .  .  .  .  .  .  .'
-      ''-:..:..:..:..:..:..:..:..:..-''
-`;
+  <!-- controles visíveis para evitar bloqueio de autoplay em navegadores -->
+  <div class="controls">
+    <button id="playBtn" class="btn">▶ Play</button>
+    <button id="scanBtn" class="btn">Scanlines: ON</button>
+    <button id="revealBtn" class="btn">Revelar</button>
+  </div>
 
-/* replicate flower vertically to create the lateral pattern */
-function fillSide(id, reps=8){
-  const node = document.getElementById(id);
-  let html = '';
-  for(let i=0;i<reps;i++){
-    html += '<pre class="flower">' + flower + '</pre>\n';
-  }
-  node.innerHTML = html;
-}
+  <script>
+    const audio = document.getElementById('bgAudio');
+    const playBtn = document.getElementById('playBtn');
+    const scanBtn = document.getElementById('scanBtn');
+    const revealBtn = document.getElementById('revealBtn');
+    const secret = document.getElementById('secret');
+    const body = document.body;
 
-/* central binary generator (makes structured blocks similar to imagem) */
-function makeBinary(lines=58, cols=76){
-  const rows = [];
-  for(let r=0;r<lines;r++){
-    // create groups and some blank spaces to mimic the rhythmic pattern
-    let line = '';
-    for(let c=0;c<cols;c++){
-      // bias some columns for runs of zeros/ones to mimic the photo
-      const bias = Math.sin((r*0.5 + c*0.2)) * 0.3;
-      const p = Math.random() + bias;
-      line += (p > 0.5) ? '1' : '0';
+    // tentativa de autoplay (pode ser bloqueada em navegadores)
+    window.addEventListener('load',()=>{
+      audio.volume = 0.5;
+      audio.play().then(()=>{
+        playBtn.textContent = '⏸ Pause';
+      }).catch(()=>{
+        // autoplay bloqueado — botão visível para o usuário
+        playBtn.textContent = '▶ Play';
+      });
+    });
+
+    playBtn.addEventListener('click',()=>{
+      if(audio.paused){
+        audio.play();playBtn.textContent='⏸ Pause';
+      } else {audio.pause();playBtn.textContent='▶ Play';}
+    });
+
+    // toggle scanlines
+    let scanOn = true;
+    scanBtn.addEventListener('click',()=>{
+      scanOn = !scanOn; if(scanOn){body.classList.add('scanlines');scanBtn.textContent='Scanlines: ON'} else {body.classList.remove('scanlines');scanBtn.textContent='Scanlines: OFF'}
+    });
+
+    // reveal secret
+    let revealed = false;
+    function toggleSecret(){
+      revealed = !revealed; if(revealed){secret.classList.add('revealed');revealBtn.textContent='Ocultar'} else {secret.classList.remove('revealed');revealBtn.textContent='Revelar'}
     }
-    // occasionally insert shorter/centered rows (like image)
-    if(Math.random() < 0.08){
-      const start = Math.floor(cols*0.12);
-      const end = Math.floor(cols*0.88);
-      line = ' '.repeat(start) + line.slice(start,end) + ' '.repeat(cols-end);
-    }
-    rows.push(line);
-  }
-  return rows.join('\n');
-}
+    revealBtn.addEventListener('click',toggleSecret);
 
-/* fill sides and center */
-fillSide('leftCol', 6);
-fillSide('rightCol', 6);
-document.getElementById('centerBin').innerText = makeBinary(70,92);
+    // keyboard shortcuts: E to toggle secret, S to toggle scanlines, Space to toggle audio
+    window.addEventListener('keydown',(e)=>{
+      if(e.key.toLowerCase()==='e'){ toggleSecret(); }
+      if(e.key.toLowerCase()==='s'){ scanBtn.click(); }
+      if(e.code==='Space'){ e.preventDefault(); playBtn.click(); }
+    });
 
-/* audio controls */
-const audio = document.getElementById('bg');
-const playBtn = document.getElementById('play');
-playBtn.addEventListener('click', ()=>{
-  if(audio.paused){ audio.volume = 0.45; audio.play().catch(()=>{}); playBtn.textContent='⏸ Pause' }
-  else { audio.pause(); playBtn.textContent='▶ Play' }
-});
+    // pequeno Konami easter-egg (up up down down left right left right b a)
+    const konami = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
+    let kpos = 0;
+    window.addEventListener('keydown', (e)=>{
+      if(e.key.toLowerCase() === konami[kpos].toLowerCase()){ kpos++; if(kpos===konami.length){
+        // desbloqueia um efeito extra: alterna cor do texto
+        const main = document.getElementById('mainText');
+        main.style.color = (main.style.color === 'rgb(0,42,111)') ? '#052a6b' : '#8cdbff';
+        kpos = 0;
+        // breve notificação visual
+        secret.textContent = '[Konami] Cor do texto alternada.'; secret.classList.add('revealed'); setTimeout(()=>{ if(!revealed){ secret.classList.remove('revealed'); } secret.textContent = '[EASTER EGG] — Pressione a tecla E para ocultar novamente.'; },2500);
+      }} else { kpos = 0; }
+    });
 
-/* toggle blue text mode (satisfaz o pedido "um grande texto em azul escuro") */
-const toggleBtn = document.getElementById('toggleColor');
-toggleBtn.addEventListener('click', ()=>{
-  document.body.classList.toggle('blueMode');
-  toggleBtn.textContent = document.body.classList.contains('blueMode') ? 'Rosa' : 'Azul escuro';
-});
-
-/* invert colors quick tweak */
-document.getElementById('invert').addEventListener('click', ()=>{
-  if(document.body.style.filter === 'invert(1)'){
-    document.body.style.filter = '';
-  } else {
-    document.body.style.filter = 'invert(1) hue-rotate(180deg)';
-  }
-});
-
-/* keyboard easter eggs (E reveals hidden message in center, Space toggle audio) */
-window.addEventListener('keydown', (e)=>{
-  if(e.key.toLowerCase()==='e'){
-    const center = document.getElementById('centerBin');
-    const hint = '\n\n   --- O QUE NÃO É VISTO ESTÁ GRAVADO NO CONSOLE ---\n\n';
-    if(center.innerText.includes(hint)) center.innerText = center.innerText.replace(hint,'');
-    else center.innerText = center.innerText + hint;
-  }
-  if(e.code==='Space'){ e.preventDefault(); playBtn.click(); }
-});
-
-/* console message (esconder lore / pistas no console) */
-console.log("%cTERMINAL 00\n%cProcure por /secret (internal) — mensagens e pistas podem estar aqui.", 
-  "color:#ff6fa0; font-family: monospace; font-size:14px;", "color:#9ec3ff; font-family: monospace; font-size:10px;");
-
-</script>
+    // dica: você pode trocar a imagem de fundo e o áudio simplesmente substituindo os arquivos 'background.jpg' e 'audio.mp3'.
+  </script>
 </body>
 </html>
